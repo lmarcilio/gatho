@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-sf-bg: #000000;
+  --color-sf-purple: #C026D3;
+  --color-sf-blue: #00F0FF;
+  --color-sf-orange: #FF6700;
+  --color-sf-text: #FFFFFF;
+  --color-sf-text-muted: #E0E0E0;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --shadow-neon-purple: 0 0 10px rgba(192, 38, 211, 0.5), 0 0 20px rgba(192, 38, 211, 0.3);
+  --shadow-neon-blue: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+  --shadow-neon-orange: 0 0 10px rgba(255, 103, 0, 0.5), 0 0 20px rgba(255, 103, 0, 0.3);
+}
+
+@layer base {
+  body {
+    @apply bg-sf-bg text-sf-text font-sans antialiased min-h-screen selection:bg-sf-purple selection:text-white;
+  }
+}
+
+@layer utilities {
+  .text-gradient-neon {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-sf-purple via-sf-blue to-sf-orange;
+  }
+  
+  .border-neon-purple {
+    @apply border border-sf-purple/50 shadow-neon-purple;
+  }
+  
+  .border-neon-blue {
+    @apply border border-sf-blue/50 shadow-neon-blue;
+  }
+  
+  .hover-neon-purple {
+    @apply transition-all duration-300 hover:border-sf-purple hover:shadow-neon-purple hover:-translate-y-1;
+  }
+  
+  .hover-neon-blue {
+    @apply transition-all duration-300 hover:border-sf-blue hover:shadow-neon-blue hover:-translate-y-1;
+  }
+  
+  .btn-neon {
+    @apply relative inline-flex items-center justify-center px-6 py-3 font-medium text-white transition-all duration-300 bg-sf-bg border border-sf-purple rounded-xl hover:shadow-neon-purple hover:bg-sf-purple/10 overflow-hidden;
+  }
+  
+  .btn-neon-primary {
+    @apply relative inline-flex items-center justify-center px-6 py-3 font-medium text-white transition-all duration-300 bg-sf-purple border border-sf-purple rounded-xl hover:shadow-neon-purple hover:bg-sf-purple/80 overflow-hidden;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #000000;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #C026D3;
+  }
+}
