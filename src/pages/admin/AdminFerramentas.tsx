@@ -16,8 +16,7 @@ export default function AdminFerramentas() {
     tool_url: '',
     image_url: '',
     is_popular: false,
-    youtube_refs: [{ title: '', url: '' }],
-    is18Plus: false
+    youtube_refs: [{ title: '', url: '' }]
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,12 +55,11 @@ export default function AdminFerramentas() {
         tool_url: tool.tool_url || '',
         image_url: tool.image_url || '',
         is_popular: tool.is_popular,
-        youtube_refs: tool.youtube_refs && tool.youtube_refs.length > 0 ? tool.youtube_refs : [{ title: '', url: '' }],
-        is18Plus: tool.is18Plus || false
+        youtube_refs: tool.youtube_refs && tool.youtube_refs.length > 0 ? tool.youtube_refs : [{ title: '', url: '' }]
       });
       setEditingId(tool.id);
     } else {
-      setFormData({ name: '', category: 'Imagem', description: '', tool_url: '', image_url: '', is_popular: false, youtube_refs: [{ title: '', url: '' }], is18Plus: false });
+      setFormData({ name: '', category: 'Imagem', description: '', tool_url: '', image_url: '', is_popular: false, youtube_refs: [{ title: '', url: '' }] });
       setEditingId(null);
     }
     setView('form');
@@ -320,25 +318,16 @@ export default function AdminFerramentas() {
                   ))}
                </div>
 
-           </div>
-           
-           <div className="p-6 border-t border-white/10 bg-black/40 flex items-center justify-between gap-3">
-              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-red-500 bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">
-                 <input 
-                    type="checkbox" 
-                    checked={!!formData.is18Plus}
-                    onChange={(e) => setFormData({...formData, is18Plus: e.target.checked})}
-                    className="w-4 h-4 rounded border-white/10 bg-white/5 accent-red-500" 
-                 />
-                 Conteúdo +18
-              </label>
-              <div className="flex gap-3">
-                 <button onClick={() => setView('list')} className="px-6 py-2.5 rounded-lg font-bold text-white hover:bg-white/10 transition-colors">Cancelar</button>
-                 <button onClick={handleSaveTool} className="px-6 py-2.5 rounded-lg font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-                    Salvar no Banco
-                 </button>
-              </div>
-           </div>
+            </div>
+            
+            <div className="p-6 border-t border-white/10 bg-black/40 flex items-center justify-end gap-3">
+               <div className="flex gap-3">
+                  <button onClick={() => setView('list')} className="px-6 py-2.5 rounded-lg font-bold text-white hover:bg-white/10 transition-colors">Cancelar</button>
+                  <button onClick={handleSaveTool} className="px-6 py-2.5 rounded-lg font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+                     Salvar no Banco
+                  </button>
+               </div>
+            </div>
         </motion.div>
       )}
     </div>
