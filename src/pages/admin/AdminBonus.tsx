@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
-import { useBonus } from '@/lib/storage';
+import { Plus, Search, Edit, Trash2, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminBonus() {
-  const [bonus, setBonus] = useBonus();
+  const [bonus, setBonus] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'form'>('list');
 
   const [formData, setFormData] = useState({
@@ -18,6 +19,26 @@ export default function AdminBonus() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const fetchBonus = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('bonus')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setBonus(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar bônus:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBonus();
+  }, []);
+
   const filteredBonus = bonus.filter(b => 
     b.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     (b.category && b.category.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -30,53 +51,58 @@ export default function AdminBonus() {
 
   const handleOpenForm = (item?: any) => {
     if (item) {
-      let initialVideos = [{ title: '', url: '' }];
-      if (item.videos && item.videos.length > 0) {
-        initialVideos = item.videos;
-      } else if (item.videoLink) {
-        initialVideos = [{ title: 'Vídeo Principal', url: item.videoLink }];
-      }
-      
       setFormData({
         title: item.title || '',
         category: item.category || '',
         description: item.description || '',
         pageLink: item.pageLink || '',
-        videos: initialVideos,
+        videos: item.videos && item.videos.length > 0 ? item.videos : [{ title: '', url: '' }],
         is18Plus: item.is18Plus || false
       });
       setEditingId(item.id);
     } else {
-      setFormData({ title: '', category: '', description: '', pageLink: '', videos: [{ title: '', url: '' }] });
+      setFormData({ title: '', category: '', description: '', pageLink: '', videos: [{ title: '', url: '' }], is18Plus: false });
       setEditingId(null);
     }
     setView('form');
   };
 
-  const handleSaveBonus = () => {
+  const handleSaveBonus = async () => {
     if (!formData.title) return;
     
-    // Clean up empty videos
+    setLoading(true);
     const cleanVideos = formData.videos.filter(v => v.url.trim());
-    const dataToSave = { ...formData, videos: cleanVideos, videoLink: undefined };
+    const dataToSave = { ...formData, videos: cleanVideos };
     
-    if (editingId) {
-      setBonus(prev => prev.map(b => b.id === editingId ? { ...b, ...dataToSave } : b));
-    } else {
-      const newBonus = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...dataToSave
-      };
-      setBonus(prev => [...prev, newBonus]);
+    try {
+      if (editingId) {
+        const { error } = await supabase.from('bonus').update(dataToSave).eq('id', editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('bonus').insert([dataToSave]);
+        if (error) throw error;
+      }
+      await fetchBonus();
+      setView('list');
+      setEditingId(null);
+    } catch (err: any) {
+      alert(`Erro ao salvar: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
-    setView('list');
-    setFormData({ title: '', category: '', description: '', pageLink: '', videos: [{ title: '', url: '' }] });
-    setEditingId(null);
   };
 
-  const handleDeleteBonus = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este bônus?')) {
+  const handleDeleteBonus = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir este bônus?')) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('bonus').delete().eq('id', id);
+      if (error) throw error;
       setBonus(prev => prev.filter(b => b.id !== id));
+    } catch (err: any) {
+      alert(`Erro ao excluir: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,43 +134,51 @@ export default function AdminBonus() {
           </div>
 
           <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-md">
-             <table className="w-full text-left text-sm text-gray-400">
-                <thead className="bg-black/40 text-gray-300 uppercase text-xs font-bold tracking-wider">
-                   <tr>
-                      <th className="px-6 py-4 border-b border-white/5">Título</th>
-                      <th className="px-6 py-4 border-b border-white/5">Categoria</th>
-                      <th className="px-6 py-4 border-b border-white/5 text-right">Ações</th>
-                   </tr>
-                </thead>
-                <tbody>
-                   {filteredBonus.map((item, idx) => (
-                      <motion.tr 
-                        key={item.id} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                      >
-                         <td className="px-6 py-4 font-bold text-white">{item.title}</td>
-                         <td className="px-6 py-4">{item.category}</td>
-                         <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
-                               <button onClick={() => handleOpenForm(item)} className="p-2 bg-white/5 hover:bg-sf-blue/20 hover:text-sf-blue rounded-lg border border-white/10 hover:border-sf-blue/30 transition-all text-gray-400">
-                                  <Edit className="w-4 h-4" />
-                               </button>
-                               <button onClick={() => handleDeleteBonus(item.id)} className="p-2 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-lg border border-white/10 hover:border-red-500/30 transition-all text-gray-400">
-                                  <Trash2 className="w-4 h-4" />
-                               </button>
-                            </div>
-                         </td>
-                      </motion.tr>
-                   ))}
-                </tbody>
-             </table>
-             {filteredBonus.length === 0 && (
-                <div className="p-12 text-center text-gray-500">
-                   Nenhum bônus encontrado.
-                </div>
+             {loading && view === 'list' && bonus.length === 0 ? (
+               <div className="flex h-64 items-center justify-center">
+                 <Loader2 className="w-8 h-8 text-sf-purple animate-spin" />
+               </div>
+             ) : (
+               <>
+                 <table className="w-full text-left text-sm text-gray-400">
+                    <thead className="bg-black/40 text-gray-300 uppercase text-xs font-bold tracking-wider">
+                       <tr>
+                          <th className="px-6 py-4 border-b border-white/5">Título</th>
+                          <th className="px-6 py-4 border-b border-white/5">Categoria</th>
+                          <th className="px-6 py-4 border-b border-white/5 text-right">Ações</th>
+                       </tr>
+                    </thead>
+                    <tbody>
+                       {filteredBonus.map((item, idx) => (
+                          <motion.tr 
+                            key={item.id} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                          >
+                             <td className="px-6 py-4 font-bold text-white">{item.title}</td>
+                             <td className="px-6 py-4">{item.category}</td>
+                             <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                   <button onClick={() => handleOpenForm(item)} className="p-2 bg-white/5 hover:bg-sf-blue/20 hover:text-sf-blue rounded-lg border border-white/10 hover:border-sf-blue/30 transition-all text-gray-400">
+                                      <Edit className="w-4 h-4" />
+                                   </button>
+                                   <button onClick={() => handleDeleteBonus(item.id)} className="p-2 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-lg border border-white/10 hover:border-red-500/30 transition-all text-gray-400">
+                                      <Trash2 className="w-4 h-4" />
+                                   </button>
+                                </div>
+                             </td>
+                          </motion.tr>
+                       ))}
+                    </tbody>
+                 </table>
+                 {filteredBonus.length === 0 && (
+                    <div className="p-12 text-center text-gray-500">
+                       Nenhum bônus encontrado no banco.
+                    </div>
+                 )}
+               </>
              )}
           </div>
         </motion.div>

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Search, Edit, Trash2, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
-import { useTools } from '@/lib/storage';
+import { Plus, Search, Edit, Trash2, Link as LinkIcon, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminFerramentas() {
-  const [tools, setTools] = useTools();
+  const [tools, setTools] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'form'>('list');
 
   // Form state
@@ -20,6 +21,26 @@ export default function AdminFerramentas() {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchTools = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setTools(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar ferramentas:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTools();
+  }, []);
 
   const filteredTools = tools.filter(tool => 
     tool.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -46,31 +67,42 @@ export default function AdminFerramentas() {
     setView('form');
   };
 
-  const handleSaveTool = () => {
-    if (!formData.name) return; // Simple validation
+  const handleSaveTool = async () => {
+    if (!formData.name) return;
     
-    // Clean up empty videos
+    setLoading(true);
     const cleanVideos = formData.videos.filter((v: any) => v.url.trim());
     const dataToSave = { ...formData, videos: cleanVideos };
     
-    if (editingId) {
-      setTools((prev) => prev.map(t => t.id === editingId ? { ...t, ...dataToSave } : t));
-    } else {
-      const newTool = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...dataToSave
-      };
-      setTools((prev) => [...prev, newTool]);
+    try {
+      if (editingId) {
+        const { error } = await supabase.from('tools').update(dataToSave).eq('id', editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('tools').insert([dataToSave]);
+        if (error) throw error;
+      }
+      await fetchTools();
+      setView('list');
+      setEditingId(null);
+    } catch (err: any) {
+      alert(`Erro ao salvar: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
-    
-    setView('list');
-    setFormData({ name: '', category: 'Imagem', desc: '', url: '', img: '', is_popular: false, videos: [{ title: '', url: '' }] }); // Reset form
-    setEditingId(null);
   };
 
-  const handleDeleteTool = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta ferramenta?')) {
-      setTools((prev) => prev.filter(t => t.id !== id));
+  const handleDeleteTool = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta ferramenta?')) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('tools').delete().eq('id', id);
+      if (error) throw error;
+      setTools(prev => prev.filter(t => t.id !== id));
+    } catch (err: any) {
+      alert(`Erro ao excluir: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,58 +131,66 @@ export default function AdminFerramentas() {
           </div>
 
           <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-md">
-             <table className="w-full text-left text-sm text-gray-400">
-                <thead className="bg-black/40 text-gray-300 uppercase text-xs font-bold tracking-wider">
-                   <tr>
-                      <th className="px-6 py-4 border-b border-white/5">Ferramenta</th>
-                      <th className="px-6 py-4 border-b border-white/5">Categoria</th>
-                      <th className="px-6 py-4 border-b border-white/5">Status</th>
-                      <th className="px-6 py-4 border-b border-white/5 text-right">Ações</th>
-                   </tr>
-                </thead>
-                <tbody>
-                   {filteredTools.length === 0 && (
-                      <tr><td colSpan={4} className="p-8 text-center text-gray-500">Nenhuma ferramenta encontrada.</td></tr>
-                   )}
-                   {filteredTools.map((tool, idx) => (
-                      <motion.tr 
-                        key={tool.id} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                      >
-                         <td className="px-6 py-4 font-bold text-white">{tool.name}</td>
-                         <td className="px-6 py-4">
-                            <span className="bg-white/10 border border-white/20 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider backdrop-blur-sm">
-                               {tool.category}
-                            </span>
-                         </td>
-                         <td className="px-6 py-4">
-                            {tool.is_popular ? (
-                               <span className="text-sf-purple bg-sf-purple/10 border border-sf-purple/20 px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wider">Destaque</span>
-                            ) : (
-                               <span className="text-gray-400">Normal</span>
-                            )}
-                         </td>
-                         <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
-                               <button onClick={() => handleOpenForm(tool)} className="p-2 bg-white/5 hover:bg-sf-blue/20 hover:text-sf-blue rounded-lg border border-white/10 hover:border-sf-blue/30 transition-all text-gray-400">
-                                  <Edit className="w-4 h-4" />
-                               </button>
-                               <button onClick={() => handleDeleteTool(tool.id)} className="p-2 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-lg border border-white/10 hover:border-red-500/30 transition-all text-gray-400">
-                                  <Trash2 className="w-4 h-4" />
-                               </button>
-                            </div>
-                         </td>
-                      </motion.tr>
-                   ))}
-                </tbody>
-             </table>
-             {tools.length === 0 && (
-                <div className="p-12 text-center text-gray-500">
-                   Nenhuma ferramenta cadastrada ainda.
-                </div>
+             {loading && view === 'list' && tools.length === 0 ? (
+               <div className="flex h-64 items-center justify-center">
+                 <Loader2 className="w-8 h-8 text-sf-purple animate-spin" />
+               </div>
+             ) : (
+               <>
+                 <table className="w-full text-left text-sm text-gray-400">
+                    <thead className="bg-black/40 text-gray-300 uppercase text-xs font-bold tracking-wider">
+                       <tr>
+                          <th className="px-6 py-4 border-b border-white/5">Ferramenta</th>
+                          <th className="px-6 py-4 border-b border-white/5">Categoria</th>
+                          <th className="px-6 py-4 border-b border-white/5">Status</th>
+                          <th className="px-6 py-4 border-b border-white/5 text-right">Ações</th>
+                       </tr>
+                    </thead>
+                    <tbody>
+                       {filteredTools.length === 0 && (
+                          <tr><td colSpan={4} className="p-8 text-center text-gray-500">Nenhuma ferramenta encontrada.</td></tr>
+                       )}
+                       {filteredTools.map((tool, idx) => (
+                          <motion.tr 
+                            key={tool.id} 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                          >
+                             <td className="px-6 py-4 font-bold text-white">{tool.name}</td>
+                             <td className="px-6 py-4">
+                                <span className="bg-white/10 border border-white/20 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider backdrop-blur-sm">
+                                   {tool.category}
+                                </span>
+                             </td>
+                             <td className="px-6 py-4">
+                                {tool.is_popular ? (
+                                   <span className="text-sf-purple bg-sf-purple/10 border border-sf-purple/20 px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wider">Destaque</span>
+                                ) : (
+                                   <span className="text-gray-400">Normal</span>
+                                )}
+                             </td>
+                             <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                   <button onClick={() => handleOpenForm(tool)} className="p-2 bg-white/5 hover:bg-sf-blue/20 hover:text-sf-blue rounded-lg border border-white/10 hover:border-sf-blue/30 transition-all text-gray-400">
+                                      <Edit className="w-4 h-4" />
+                                   </button>
+                                   <button onClick={() => handleDeleteTool(tool.id)} className="p-2 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-lg border border-white/10 hover:border-red-500/30 transition-all text-gray-400">
+                                      <Trash2 className="w-4 h-4" />
+                                   </button>
+                                </div>
+                             </td>
+                          </motion.tr>
+                       ))}
+                    </tbody>
+                 </table>
+                 {tools.length === 0 && (
+                    <div className="p-12 text-center text-gray-500">
+                       Nenhuma ferramenta cadastrada ainda no banco.
+                    </div>
+                 )}
+               </>
              )}
           </div>
         </motion.div>

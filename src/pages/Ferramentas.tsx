@@ -1,18 +1,42 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, Wrench, ArrowUpRight, Bookmark, PlayCircle, ArrowLeft, PlaySquare, ExternalLink } from 'lucide-react';
+import { Search, Filter, Wrench, ArrowUpRight, Bookmark, PlayCircle, ArrowLeft, PlaySquare, ExternalLink, Loader2 } from 'lucide-react';
 import { cn, getEmbedUrl } from '@/lib/utils';
-import { useTools, use18PlusMode } from '@/lib/storage';
+import { supabase } from '@/lib/supabase';
+import { use18PlusMode } from '@/lib/storage';
 
 const categories = ["Todas", "Imagem", "Texto/Código", "Vídeo", "Áudio", "Automação", "Pesquisa"];
 
 export default function Ferramentas() {
-  const [tools] = useTools();
+  const [tools, setTools] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [is18PlusMode] = use18PlusMode();
-  const filtered18tools = is18PlusMode ? tools : tools.filter(item => !item.is18Plus);
   const [activeCategory, setActiveCategory] = useState("Todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTools = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('tools')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        setTools(data || []);
+      } catch (err) {
+        console.error('Erro ao buscar ferramentas:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTools();
+  }, []);
+
+  const filtered18tools = useMemo(() => {
+    return is18PlusMode ? tools : tools.filter(item => !item.is18Plus);
+  }, [tools, is18PlusMode]);
 
   const filteredTools = useMemo(() => {
     return filtered18tools.filter(tool => {
@@ -173,7 +197,12 @@ export default function Ferramentas() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTools.length === 0 ? (
+        {loading ? (
+           <div className="col-span-full py-20 text-center">
+              <Loader2 className="w-12 h-12 mx-auto mb-4 text-sf-purple animate-spin" />
+              <p className="text-sf-text-muted">Carregando ferramentas do banco...</p>
+           </div>
+        ) : filteredTools.length === 0 ? (
            <div className="col-span-full py-20 text-center text-sf-text-muted border border-dashed border-white/10 rounded-2xl">
               <Wrench className="w-12 h-12 mx-auto mb-4 text-white/20" />
               <p>Nenhuma ferramenta encontrada para o seu filtro.</p>
