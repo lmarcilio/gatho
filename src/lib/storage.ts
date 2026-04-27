@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './supabase';
 
 const defaultTools = [
   { id: "1", name: "Midjourney", desc: "Geração de imagens de altíssima qualidade a partir de texto.", category: "Imagem", price_type: "Pago", is_popular: true, img: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=500&q=80", url: "https://midjourney.com", videos: [{ title: "Tutorial Básico", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }], is18Plus: false },
@@ -96,9 +97,127 @@ function useLocalStorage<T>(key: string, initialValue: T) {
   return [storedValue, setValue] as const;
 }
 
-export function useTools() { return useLocalStorage('sf_tools', defaultTools); }
-export function usePrompts() { return useLocalStorage('sf_prompts', defaultPrompts); }
-export function useAulas() { return useLocalStorage('sf_aulas', defaultAulas); }
+export function useTools() { 
+  const [tools, setTools] = useLocalStorage('sf_tools', defaultTools);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadToolsFromSupabase();
+  }, []);
+
+  const loadToolsFromSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedTools = data.map((tool: any) => ({
+          id: tool.id,
+          name: tool.name,
+          desc: tool.description,
+          category: tool.category,
+          price_type: tool.price_type,
+          is_popular: tool.is_popular,
+          img: tool.image_url,
+          url: tool.tool_url,
+          videos: tool.youtube_refs || [],
+          is18Plus: false
+        }));
+        setTools(formattedTools);
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar ferramentas do Supabase, usando localStorage:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return [tools, setTools] as const;
+}
+
+export function usePrompts() { 
+  const [prompts, setPrompts] = useLocalStorage('sf_prompts', defaultPrompts);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPromptsFromSupabase();
+  }, []);
+
+  const loadPromptsFromSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('prompts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedPrompts = data.map((prompt: any) => ({
+          id: prompt.id,
+          title: prompt.title,
+          type: prompt.ai_type,
+          category: prompt.category,
+          subcategory: prompt.category,
+          level: prompt.difficulty_level,
+          copy: prompt.prompt_text,
+          is18Plus: prompt.is_premium ? false : false
+        }));
+        setPrompts(formattedPrompts);
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar prompts do Supabase, usando localStorage:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return [prompts, setPrompts] as const;
+}
+
+export function useAulas() { 
+  const [aulas, setAulas] = useLocalStorage('sf_aulas', defaultAulas);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAulasFromSupabase();
+  }, []);
+
+  const loadAulasFromSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedAulas = data.map((aula: any) => ({
+          id: aula.id,
+          title: aula.title,
+          module: aula.category,
+          description: aula.description,
+          videoUrl: aula.video_url,
+          pdfUrl: aula.pdf_url,
+          is18Plus: false
+        }));
+        setAulas(formattedAulas);
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar aulas do Supabase, usando localStorage:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return [aulas, setAulas] as const;
+}
+
 export function useCursos() { return useLocalStorage('sf_cursos', defaultCursos); }
 export function useBonus() { return useLocalStorage('sf_bonus', defaultBonus); }
 export function useConfig() { return useLocalStorage('sf_config', defaultConfig); }
