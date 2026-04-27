@@ -98,7 +98,7 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 }
 
 export function useTools() { 
-  const [tools, setTools] = useLocalStorage('sf_tools', defaultTools);
+  const [tools, setTools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -107,12 +107,17 @@ export function useTools() {
 
   const loadToolsFromSupabase = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('tools')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Erro ao carregar ferramentas do Supabase:', error);
+        setTools([]);
+        return;
+      }
 
       if (data && data.length > 0) {
         const formattedTools = data.map((tool: any) => ({
@@ -128,9 +133,13 @@ export function useTools() {
           is18Plus: false
         }));
         setTools(formattedTools);
+      } else {
+        // Se o Supabase retornar vazio, define como vazio (não usa defaults)
+        setTools([]);
       }
     } catch (error) {
-      console.warn('Erro ao carregar ferramentas do Supabase, usando localStorage:', error);
+      console.error('Erro crítico ao carregar ferramentas:', error);
+      setTools([]);
     } finally {
       setLoading(false);
     }
@@ -140,7 +149,7 @@ export function useTools() {
 }
 
 export function usePrompts() { 
-  const [prompts, setPrompts] = useLocalStorage('sf_prompts', defaultPrompts);
+  const [prompts, setPrompts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -149,12 +158,17 @@ export function usePrompts() {
 
   const loadPromptsFromSupabase = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('prompts')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Erro ao carregar prompts do Supabase:', error);
+        setPrompts([]);
+        return;
+      }
 
       if (data && data.length > 0) {
         const formattedPrompts = data.map((prompt: any) => ({
@@ -168,9 +182,12 @@ export function usePrompts() {
           is18Plus: prompt.is_premium ? false : false
         }));
         setPrompts(formattedPrompts);
+      } else {
+        setPrompts([]);
       }
     } catch (error) {
-      console.warn('Erro ao carregar prompts do Supabase, usando localStorage:', error);
+      console.error('Erro crítico ao carregar prompts:', error);
+      setPrompts([]);
     } finally {
       setLoading(false);
     }
@@ -180,7 +197,7 @@ export function usePrompts() {
 }
 
 export function useAulas() { 
-  const [aulas, setAulas] = useLocalStorage('sf_aulas', defaultAulas);
+  const [aulas, setAulas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -189,12 +206,17 @@ export function useAulas() {
 
   const loadAulasFromSupabase = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('lessons')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Erro ao carregar aulas do Supabase:', error);
+        setAulas([]);
+        return;
+      }
 
       if (data && data.length > 0) {
         const formattedAulas = data.map((aula: any) => ({
@@ -207,9 +229,12 @@ export function useAulas() {
           is18Plus: false
         }));
         setAulas(formattedAulas);
+      } else {
+        setAulas([]);
       }
     } catch (error) {
-      console.warn('Erro ao carregar aulas do Supabase, usando localStorage:', error);
+      console.error('Erro crítico ao carregar aulas:', error);
+      setAulas([]);
     } finally {
       setLoading(false);
     }
