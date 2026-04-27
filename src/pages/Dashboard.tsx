@@ -53,9 +53,9 @@ export default function Dashboard() {
       {/* Quick Stats / Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { title: "Ferramentas Ativas", value: tools.length.toString(), icon: Wrench, color: "text-sf-purple", bg: "bg-sf-purple/10", border: "border-sf-purple/20" },
-          { title: "Prompts na Biblioteca", value: prompts.length.toString(), icon: FileText, color: "text-sf-blue", bg: "bg-sf-blue/10", border: "border-sf-blue/20" },
-          { title: "Aulas", value: aulas.length.toString(), icon: Video, color: "text-sf-orange", bg: "bg-sf-orange/10", border: "border-sf-orange/20" }
+          { title: "Ferramentas Ativas", value: filteredTools.length.toString(), icon: Wrench, color: "text-sf-purple", bg: "bg-sf-purple/10", border: "border-sf-purple/20" },
+          { title: "Prompts na Biblioteca", value: ObjectPrompts.length.toString(), icon: FileText, color: "text-sf-blue", bg: "bg-sf-blue/10", border: "border-sf-blue/20" },
+          { title: "Aulas", value: filteredAulas.length.toString(), icon: Video, color: "text-sf-orange", bg: "bg-sf-orange/10", border: "border-sf-orange/20" }
         ].map((stat, idx) => (
           <motion.div 
             key={idx}

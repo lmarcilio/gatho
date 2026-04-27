@@ -36,13 +36,7 @@ export default function Perfil() {
             </div>
          </div>
          
-         <hr className="border-white/5 my-8" />
-         
-         <div className="flex justify-end">
-            <button className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors">
-               Sair da Conta
-            </button>
-         </div>
+
       </div>
     </div>
   );

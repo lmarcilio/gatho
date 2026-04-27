@@ -12,11 +12,13 @@ import {
   Bell,
   Menu,
   X,
-  Cat
+  Cat,
+  LogOut
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
 import { useConfig, use18PlusMode } from '../lib/storage';
+import { useAuth } from '../lib/auth';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Início', path: '/dashboard' },
@@ -30,9 +32,11 @@ const navItems = [
 
 export function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
   const [config] = useConfig();
   const [is18PlusMode, setIs18PlusMode] = use18PlusMode();
+  const { user } = useAuth();
 
   // Close menu on route change
   useEffect(() => {
@@ -127,37 +131,74 @@ export function Layout() {
             />
           </div>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIs18PlusMode(!is18PlusMode)}
-              className={cn(
-                "flex items-center justify-center px-3 py-1.5 rounded-lg border font-bold text-sm transition-all",
-                is18PlusMode 
-                  ? "bg-red-500/20 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                  : "bg-white/5 border-white/10 text-white/50 hover:text-white"
-              )}
-            >
-              +18
-            </button>
-            <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:border-white/20 transition-all relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-sf-orange rounded-full shadow-[0_0_5px_#FF6700]" />
-            </button>
-            <button 
-              onClick={() => {
-                import('../lib/supabase').then(({ supabase }) => {
-                   supabase.auth.signOut().then(() => {
-                      window.location.reload();
-                   });
-                });
-              }}
-              title="Sair da Conta"
-              className="w-10 h-10 rounded-full border-2 border-sf-purple/50 overflow-hidden cursor-pointer hover:border-red-500 transition-colors group"
-            >
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=C026D3" alt="Profile" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
-            </button>
-          </div>
+           {/* Right Side */}
+           <div className="flex items-center gap-4">
+             <button 
+               onClick={() => setIs18PlusMode(!is18PlusMode)}
+               className={cn(
+                 "flex items-center justify-center px-3 py-1.5 rounded-lg border font-bold text-sm transition-all",
+                 is18PlusMode 
+                   ? "bg-red-500/20 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                   : "bg-white/5 border-white/10 text-white/50 hover:text-white"
+               )}
+             >
+               +18
+             </button>
+             <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:border-white/20 transition-all relative">
+               <Bell className="w-5 h-5" />
+               <span className="absolute top-2 right-2 w-2 h-2 bg-sf-orange rounded-full shadow-[0_0_5px_#FF6700]" />
+             </button>
+             
+             {/* Profile Dropdown */}
+             <div className="relative">
+               <button 
+                 onClick={() => setProfileOpen(!profileOpen)}
+                 title="Perfil"
+                 className="w-10 h-10 rounded-full border-2 border-sf-purple/50 overflow-hidden cursor-pointer hover:border-sf-purple transition-colors group relative"
+               >
+                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=C026D3" alt="Profile" className="w-full h-full object-cover group-hover:opacity-70 transition-opacity" />
+               </button>
+               
+               {/* Dropdown Menu */}
+               {profileOpen && (
+                 <motion.div
+                   initial={{ opacity: 0, y: -10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, y: -10 }}
+                   className="absolute right-0 mt-2 w-48 bg-sf-bg border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden"
+                 >
+                   <div className="p-4 border-b border-white/5">
+                     <p className="text-xs text-sf-text-muted font-semibold uppercase tracking-wider">Meu Perfil</p>
+                     <p className="text-sm text-white font-semibold mt-1">Membro Pro</p>
+                     <p className="text-xs text-sf-text-muted mt-1">{user?.email}</p>
+                   </div>
+                   
+                   <NavLink
+                     to="/dashboard/perfil"
+                     onClick={() => setProfileOpen(false)}
+                     className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/5 transition-colors text-sm font-medium border-b border-white/5"
+                   >
+                     <Settings className="w-4 h-4" />
+                     Configurações
+                   </NavLink>
+                   
+                   <button
+                     onClick={() => {
+                       import('../lib/supabase').then(({ supabase }) => {
+                         supabase.auth.signOut().then(() => {
+                           window.location.href = '/login';
+                         });
+                       });
+                     }}
+                     className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors text-sm font-medium"
+                   >
+                     <LogOut className="w-4 h-4" />
+                     Sair da Conta
+                   </button>
+                 </motion.div>
+               )}
+             </div>
+           </div>
         </header>
 
         {/* Dynamic Content */}
