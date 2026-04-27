@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Lock, Mail, KeyRound, Cat } from 'lucide-react';
+import { Lock, Mail, KeyRound, Cat, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { useConfig } from '@/lib/storage';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config] = useConfig();
@@ -18,23 +18,8 @@ export default function Login() {
     setError(null);
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({ 
-          email, 
-          password,
-          options: {
-             data: {
-                role: 'Membro'
-             }
-          }
-        });
-        if (error) throw error;
-        alert("Conta criada! Você já pode fazer login.");
-        setIsLogin(true);
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro durante a autenticação.');
     } finally {
@@ -43,7 +28,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Back Button */}
+      <Link 
+        to="/" 
+        className="absolute top-8 left-8 z-20 flex items-center gap-2 text-sf-text-muted hover:text-white transition-colors font-bold group"
+      >
+        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        Voltar para a Home
+      </Link>
+
       {/* Background blobs */}
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-sf-purple/20 blur-[120px] rounded-full mix-blend-screen pointer-events-none" />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-sf-blue/20 blur-[120px] rounded-full mix-blend-screen pointer-events-none" />
@@ -109,17 +103,12 @@ export default function Login() {
              disabled={loading}
              className="w-full bg-gradient-to-r from-sf-purple to-sf-blue hover:from-sf-purple/90 hover:to-sf-blue/90 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(192,38,211,0.3)] disabled:opacity-50 mt-6"
            >
-             {loading ? 'Carregando...' : (isLogin ? <><Lock className="w-4 h-4" /> Entrar na Plataforma</> : 'Criar minha conta')}
+             {loading ? 'Carregando...' : <><Lock className="w-4 h-4" /> Entrar na Plataforma</>}
            </button>
         </form>
 
-        <div className="mt-8 text-center">
-           <button 
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm font-medium text-sf-text-muted hover:text-white transition-colors"
-           >
-              {isLogin ? "Não tem uma conta? Crie agora" : "Já tem conta? Faça login"}
-           </button>
+        <div className="mt-8 text-center text-sf-text-muted text-sm">
+           Para adquirir acesso, escolha um plano na página inicial.
         </div>
       </motion.div>
     </div>

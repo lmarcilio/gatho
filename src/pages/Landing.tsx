@@ -1,39 +1,51 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Terminal, Video, BookOpen, Gift, ShieldAlert, Star, Check, ArrowRight, Zap, Flame, Infinity, Shield, Lock } from 'lucide-react';
+import { Sparkles, Terminal, Video, BookOpen, Gift, ShieldAlert, Star, Check, ArrowRight, Zap, Flame, Infinity, Shield, Lock, ChevronDown } from 'lucide-react';
 import { useConfig } from '@/lib/storage';
 
 export default function Landing() {
   const [config] = useConfig();
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   
   // Use uploaded logo if available, otherwise fallback to the neon cat SVG
   const hasLogo = !!config.logoUrl;
   const logoHeight = config.logoHeight ? `${config.logoHeight}px` : '40px';
+  const faqs = [
+    {
+      question: "O que é exatamente o Gatho?",
+      answer: "O Gatho é o portal definitivo de curadoria de Inteligência Artificial. Nós não somos uma ferramenta de IA, mas sim um diretório organizado que reúne as melhores ferramentas do mundo, oferece uma biblioteca de prompts testados e aulas práticas para você dominar o universo da IA."
+    },
+    {
+      question: "Como recebo meu acesso após o pagamento?",
+      answer: "Após a confirmação do pagamento, você receberá automaticamente um e-mail com seus dados de login (e-mail e senha) para acessar nossa área de membros exclusiva."
+    },
+    {
+      question: "Terei que pagar pelas ferramentas de IA indicadas?",
+      answer: "Nosso diretório inclui tanto ferramentas gratuitas quanto pagas. O Gatho fornece o acesso à nossa plataforma de curadoria, prompts e aulas. Assinaturas de ferramentas externas de terceiros não estão inclusas no valor do Gatho."
+    },
+    {
+      question: "O acesso é realmente vitalício?",
+      answer: "Sim! Ao adquirir o plano Vitalício, você paga apenas uma vez e tem acesso para sempre a todas as atualizações, novos prompts e ferramentas que adicionarmos à plataforma."
+    },
+    {
+      question: "A Área +18 é discreta?",
+      answer: "Sim, priorizamos a total discrição e privacidade. O acesso é restrito e seguro, focado em ferramentas de geração de conteúdo sem censura para uso profissional ou pessoal."
+    }
+  ];
   const plans = [
     {
-      name: "Mensal",
-      price: "R$ 47",
-      period: "/mês",
-      popular: false,
+      name: "Plano Vitalício",
+      price: "R$ 44,90",
+      period: "Pagamento Único",
+      popular: true,
       features: [
         "Acesso completo a Ferramentas de IA",
         "Biblioteca de Prompts (+1000)",
         "Todos os Cursos Oficiais",
         "Aulas e Tutoriais",
-        "Atualizações Regulares",
-      ]
-    },
-    {
-      name: "Anual VIP",
-      price: "R$ 297",
-      period: "/ano",
-      popular: true,
-      features: [
-        "Tudo do plano Mensal",
-        "Bônus Exclusivos Premium",
         "Acesso à Área +18 VIP",
-        "Suporte Prioritário",
-        "Acesso a novas features primeiro",
+        "Atualizações Vitalícias",
       ]
     }
   ];
@@ -138,7 +150,7 @@ export default function Landing() {
                transition={{ duration: 0.8, delay: 0.3 }}
                className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed font-medium"
             >
-               A plataforma definitiva de Inteligência Artificial. Ferramentas poderosas, prompts profissionais, cursos, bônus e uma área <span className="text-fuchsia-400 font-bold border-b border-fuchsia-400/30 border-dashed">+18 irresistível</span>.
+               O portal definitivo que organiza o universo da Inteligência Artificial. Um diretório curado com as melhores ferramentas externas, diversos prompts por nicho, cursos práticos e uma área <span className="text-fuchsia-400 font-bold border-b border-fuchsia-400/30 border-dashed">+18 irresistível</span>.
             </motion.p>
 
             <motion.div 
@@ -156,7 +168,6 @@ export default function Landing() {
             </motion.div>
          </div>
       </section>
-
       {/* 1. Ferramentas de IA */}
       <section id="ferramentas" className="py-24 relative overflow-hidden bg-black/40 border-y border-white/5">
          <div className="max-w-7xl mx-auto px-6">
@@ -164,15 +175,15 @@ export default function Landing() {
                <div className="w-16 h-16 rounded-2xl bg-fuchsia-500/10 mx-auto flex items-center justify-center mb-6 border border-fuchsia-500/20 shadow-[0_0_20px_rgba(192,38,211,0.2)]">
                   <Zap className="w-8 h-8 text-fuchsia-400" />
                </div>
-               <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Poder Além dos Limites</h2>
-               <p className="text-xl text-gray-400 max-w-2xl mx-auto">Um diretório selecionado com as mais poderosas ferramentas de Inteligência Artificial do mundo em um só lugar.</p>
+               <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Curadoria de Elite</h2>
+               <p className="text-xl text-gray-400 max-w-2xl mx-auto">O portal definitivo que reúne, organiza e ensina você a dominar as melhores ferramentas de Inteligência Artificial do mundo.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                {[
-                  { icon: Sparkles, title: "Geração de Imagens", desc: "Ferramentas para criar visuais impressionantes e fotorrealistas." },
-                  { icon: Terminal, title: "Código & Texto", desc: "Modelos avançados para copywriting e desenvolvimento rápido." },
-                  { icon: Video, title: "Automação e Vídeo", desc: "Edição por IA, fluxos automatizados e criação audiovisual." }
+                  { icon: Sparkles, title: "Diretório Premium", desc: "Acesso direto aos melhores geradores de imagem, vídeo e áudio sem perder tempo procurando." },
+                  { icon: Terminal, title: "Produtividade Máxima", desc: "Ferramentas de automação, pesquisa e análise selecionadas para acelerar seu fluxo de trabalho." },
+                  { icon: Video, title: "Tutoriais e Prática", desc: "Não apenas o link, mas o caminho: aulas práticas de como extrair o máximo de cada ferramenta externa." }
                ].map((item, i) => (
                   <div key={i} className="bg-white/5 border border-white/10 p-8 rounded-2xl hover:border-fuchsia-500/30 transition-all group shadow-xl">
                      <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:bg-fuchsia-500/20 group-hover:border-fuchsia-500/40 transition-colors">
@@ -193,12 +204,12 @@ export default function Landing() {
                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-bold tracking-wider mb-6">
                   <Terminal className="w-4 h-4" /> ENGENHARIA DE PROMPT
                </div>
-               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">A Biblioteca Mais Completa</h2>
+               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">Biblioteca Estratégica</h2>
                <p className="text-lg text-gray-400 mb-8 leading-relaxed">
-                  Não perca tempo tentando acertar. Acesse mais de 1.000 prompts mastigados e testados por especialistas em ChatGPT, Claude, Midjourney e muito mais. Basta copiar, colar e gerar resultados profissionais.
+                  Acesse diversos prompts organizados por nichos e categorias. Criados e testados para garantir resultados consistentes em qualquer IA de texto ou imagem do mercado.
                </p>
-               <ul className="space-y-4 mb-8">
-                  {['Copywriting e Vendas', 'Design e Imagens', 'Desenvolvimento', 'Análise de Dados'].map((item, i) => (
+               <ul className="grid grid-cols-2 gap-4 mb-8">
+                  {['Copywriting e Vendas', 'Design e Criativos', 'Programação e Código', 'Análise de Dados', 'Social Media', 'Estratégia de Negócio'].map((item, i) => (
                      <li key={i} className="flex items-center gap-3 text-gray-300 font-medium">
                         <Check className="w-5 h-5 text-blue-500" /> {item}
                      </li>
@@ -214,10 +225,10 @@ export default function Landing() {
                      <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
                      <div className="w-3 h-3 rounded-full bg-green-500/50" />
                   </div>
-                  <p className="text-blue-400 mb-2"># Contexto: Copywriter Black Belt</p>
-                  <p className="text-emerald-400 mb-2">&gt; Atue como um especialista em persuasão de alto nível.</p>
-                  <p className="mb-2">Escreva uma VSL para o meu produto de...</p>
-                  <p className="text-fuchsia-400 mt-4 animate-pulse">Gerando estrutura vencedora...</p>
+                  <p className="text-blue-400 mb-2"># Prompt Selecionado:</p>
+                  <p className="text-emerald-400 mb-2">&gt; Atue como um especialista em conversão de anúncios...</p>
+                  <p className="mb-2 text-gray-500 italic">[Nichos: E-commerce, Infoprodutos, Local]</p>
+                  <p className="text-fuchsia-400 mt-4">Pronto para copiar e colar na sua IA favorita.</p>
                </div>
             </div>
          </div>
@@ -232,34 +243,34 @@ export default function Landing() {
                <div className="space-y-4 relative z-10">
                   <div className="bg-black/60 border border-white/10 backdrop-blur-xl p-6 rounded-2xl shadow-xl">
                      <BookOpen className="w-8 h-8 text-indigo-400 mb-4" />
-                     <h4 className="text-white font-bold mb-2">Fundamentos de IA</h4>
-                     <p className="text-sm text-gray-400">12 Aulas • 3h 40m</p>
+                     <h4 className="text-white font-bold mb-2">Trilhas de Estudo</h4>
+                     <p className="text-sm text-gray-400">Do zero ao avançado</p>
                   </div>
                   <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/20 backdrop-blur-xl p-6 rounded-2xl shadow-xl mt-4">
                      <Video className="w-8 h-8 text-purple-400 mb-4" />
-                     <h4 className="text-white font-bold mb-2">Midjourney Avançado</h4>
-                     <p className="text-sm text-gray-400">Certificado Incluso</p>
+                     <h4 className="text-white font-bold mb-2">Masterclasses</h4>
+                     <p className="text-sm text-gray-400">Ferramentas de Imagem</p>
                   </div>
                </div>
                <div className="space-y-4 pt-8 relative z-10">
                   <div className="bg-black/60 border border-white/10 backdrop-blur-xl p-6 rounded-2xl shadow-xl">
                      <Star className="w-8 h-8 text-yellow-400 mb-4" />
-                     <h4 className="text-white font-bold mb-2">Parceiros Oficiais</h4>
-                     <p className="text-sm text-gray-400">Descontos VIP</p>
+                     <h4 className="text-white font-bold mb-2">Bônus Exclusivos</h4>
+                     <p className="text-sm text-gray-400">Conteúdo VIP</p>
                   </div>
                </div>
             </div>
             
             <div className="order-1 md:order-2">
                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-bold tracking-wider mb-6">
-                  <BookOpen className="w-4 h-4" /> APRENDIZADO CONTÍNUO
+                  <BookOpen className="w-4 h-4" /> APRENDIZADO PRÁTICO
                </div>
-               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">Aulas e Cursos Profissionais</h2>
+               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">Aulas de Domínio Real</h2>
                <p className="text-lg text-gray-400 mb-8 leading-relaxed">
-                  Trilhas de conhecimento desde o absoluto zero até o nível sênior. Hospedamos as melhores aulas sobre as IA do mercado, mais recomendações VIP de treinamentos dos maiores parceiros do Brasil.
+                  Não adianta ter a ferramenta sem saber usar. Nossa área de membros conta com aulas práticas focadas em resultados, ensinando você a extrair o poder máximo das melhores IAs do mercado para o seu negócio.
                </p>
                <a href="#planos" className="inline-flex items-center gap-2 font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
-                  Explorar trilhas de estudo <ArrowRight className="w-4 h-4" />
+                  Explorar conteúdo disponível <ArrowRight className="w-4 h-4" />
                </a>
             </div>
          </div>
@@ -290,32 +301,32 @@ export default function Landing() {
             <h3 className="text-2xl font-bold text-white mb-8 tracking-widest uppercase">Área Exclusiva +18</h3>
             
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-               Uma zona secreta reservada para assinantes VIP. Tecnologias sem censura, geradores de arte sem restrições, deep-dive em conteúdos obscuros e sedutores. Protegido por uma chave criptografada.
+               Uma zona restrita para quem busca tecnologias sem censura. Acesse o diretório de geradores de imagem sem restrições e aprenda as técnicas para criar conteúdos obscuros e sedutores nas melhores IAs externas.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto mb-12">
                <div className="bg-red-950/20 border border-red-500/20 p-6 rounded-2xl backdrop-blur-md">
                   <ShieldAlert className="w-6 h-6 text-red-500 mx-auto mb-3" />
                   <h4 className="text-sm font-bold uppercase tracking-wider text-red-400 mb-1">Sem Censura</h4>
-                  <p className="text-xs text-gray-400">IA sem as limitações éticas padrão (NSFW).</p>
+                  <p className="text-xs text-gray-400">Guia de IAs externas com modelos NSFW sem travas.</p>
                </div>
                <div className="bg-pink-950/20 border border-pink-500/20 p-6 rounded-2xl backdrop-blur-md">
                   <Infinity className="w-6 h-6 text-pink-500 mx-auto mb-3" />
-                  <h4 className="text-sm font-bold uppercase tracking-wider text-pink-400 mb-1">Arte Realista</h4>
-                  <p className="text-xs text-gray-400">Prompts master class para anatomia e estilo ad*lto.</p>
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-pink-400 mb-1">Engenharia Sexy</h4>
+                  <p className="text-xs text-gray-400">Prompts específicos para anatomia e estilo ad*lto.</p>
                </div>
                <div className="bg-fuchsia-950/20 border border-fuchsia-500/20 p-6 rounded-2xl backdrop-blur-md">
                   <Lock className="w-6 h-6 text-fuchsia-500 mx-auto mb-3" />
                   <h4 className="text-sm font-bold uppercase tracking-wider text-fuchsia-400 mb-1">Total Privacidade</h4>
-                  <p className="text-xs text-gray-400">Seu histórico na Área +18 nunca é rastreado.</p>
+                  <p className="text-xs text-gray-400">Acesse com segurança e discrição total.</p>
                </div>
             </div>
 
             <div className="inline-flex flex-col items-center">
                <span className="text-[10px] text-red-500 font-bold tracking-widest uppercase mb-2">Acesso Restrito</span>
                <div className="bg-white/5 border border-white/10 px-8 py-3 rounded-full flex items-center gap-3 backdrop-blur-sm shadow-xl">
-                   <Lock className="w-4 h-4 text-gray-400" />
-                   <span className="text-sm font-bold text-gray-300">Desbloqueado apenas no Plano VIP</span>
+                    <Lock className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm font-bold text-gray-300">Desbloqueado no Plano Vitalício</span>
                </div>
             </div>
          </div>
@@ -331,7 +342,7 @@ export default function Landing() {
                <p className="text-xl text-gray-400">Desbloqueie todo o poder da inteligência artificial.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="flex justify-center max-w-lg mx-auto">
                {plans.map((plan, i) => (
                   <div key={i} className={`relative p-8 rounded-3xl backdrop-blur-md transition-all duration-300 ${plan.popular ? 'bg-gradient-to-b from-fuchsia-900/30 to-black border-2 border-fuchsia-500/50 shadow-[0_0_40px_rgba(192,38,211,0.2)] lg:-translate-y-4' : 'bg-white/5 border border-white/10'}`}>
                      {plan.popular && (
@@ -363,6 +374,45 @@ export default function Landing() {
                      >
                         Quero este plano
                      </Link>
+                  </div>
+               ))}
+            </div>
+         </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-24 relative overflow-hidden">
+         <div className="max-w-3xl mx-auto px-6">
+            <div className="text-center mb-16">
+               <h2 className="text-4xl font-bold text-white mb-4">Perguntas Frequentes</h2>
+               <p className="text-gray-400">Tudo o que você precisa saber sobre o Gatho.</p>
+            </div>
+
+            <div className="space-y-4">
+               {faqs.map((faq, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/20">
+                     <button 
+                        onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                        className="w-full px-6 py-5 flex items-center justify-between text-left group"
+                     >
+                        <span className="font-bold text-white group-hover:text-fuchsia-400 transition-colors">{faq.question}</span>
+                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${openFaq === i ? 'rotate-180 text-fuchsia-400' : ''}`} />
+                     </button>
+                     <AnimatePresence>
+                        {openFaq === i && (
+                           <motion.div 
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                           >
+                              <div className="px-6 pb-6 text-gray-400 leading-relaxed border-t border-white/5 pt-4">
+                                 {faq.answer}
+                              </div>
+                           </motion.div>
+                        )}
+                     </AnimatePresence>
                   </div>
                ))}
             </div>

@@ -188,26 +188,6 @@ export default function AdminConfiguracoes() {
                </div>
             </div>
          </div>
-
-         <div className="space-y-6 pt-6">
-            <h2 className="text-xl font-bold text-white border-b border-white/10 pb-4">Parâmetros do Sistema</h2>
-            
-            <div className="flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5">
-               <div>
-                  <h3 className="font-bold text-white mb-1">Novas Matrículas</h3>
-                  <p className="text-sm text-gray-400">Permitir que novas contas sejam criadas na plataforma e comprar os planos assinaturas.</p>
-               </div>
-               <label className="relative inline-flex items-center cursor-pointer">
-                 <input 
-                   type="checkbox" 
-                   className="sr-only peer" 
-                   checked={config.registrationOpen}
-                   onChange={(e) => setConfig({...config, registrationOpen: e.target.checked})}
-                 />
-                 <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-               </label>
-            </div>
-         </div>
       </div>
     </div>
   );
