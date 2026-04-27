@@ -12,11 +12,11 @@ export default function AdminFerramentas() {
   const [formData, setFormData] = useState({
     name: '',
     category: 'Imagem',
-    desc: '',
-    url: '',
-    img: '',
+    description: '',
+    tool_url: '',
+    image_url: '',
     is_popular: false,
-    videos: [{ title: '', url: '' }],
+    youtube_refs: [{ title: '', url: '' }],
     is18Plus: false
   });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,16 +52,16 @@ export default function AdminFerramentas() {
       setFormData({
         name: tool.name,
         category: tool.category,
-        desc: tool.desc || '',
-        url: tool.url || '',
-        img: tool.img || '',
+        description: tool.description || '',
+        tool_url: tool.tool_url || '',
+        image_url: tool.image_url || '',
         is_popular: tool.is_popular,
-        videos: tool.videos && tool.videos.length > 0 ? tool.videos : [{ title: '', url: '' }],
+        youtube_refs: tool.youtube_refs && tool.youtube_refs.length > 0 ? tool.youtube_refs : [{ title: '', url: '' }],
         is18Plus: tool.is18Plus || false
       });
       setEditingId(tool.id);
     } else {
-      setFormData({ name: '', category: 'Imagem', desc: '', url: '', img: '', is_popular: false, videos: [{ title: '', url: '' }], is18Plus: false });
+      setFormData({ name: '', category: 'Imagem', description: '', tool_url: '', image_url: '', is_popular: false, youtube_refs: [{ title: '', url: '' }], is18Plus: false });
       setEditingId(null);
     }
     setView('form');
@@ -71,8 +71,8 @@ export default function AdminFerramentas() {
     if (!formData.name) return;
     
     setLoading(true);
-    const cleanVideos = formData.videos.filter((v: any) => v.url.trim());
-    const dataToSave = { ...formData, videos: cleanVideos };
+    const cleanVideos = formData.youtube_refs.filter((v: any) => v.url.trim());
+    const dataToSave = { ...formData, youtube_refs: cleanVideos };
     
     try {
       if (editingId) {
@@ -232,26 +232,26 @@ export default function AdminFerramentas() {
                  </div>
               </div>
               
-              <div className="space-y-2">
-                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Descrição Curta</label>
-                 <textarea 
-                    value={formData.desc}
-                    onChange={(e) => setFormData({...formData, desc: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500 focus:bg-white/10 h-24 resize-none" 
-                    placeholder="O que esta ferramenta faz?"
-                 />
-              </div>
+               <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Descrição Curta</label>
+                  <textarea 
+                     value={formData.description}
+                     onChange={(e) => setFormData({...formData, description: e.target.value})}
+                     className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500 focus:bg-white/10 h-24 resize-none" 
+                     placeholder="O que esta ferramenta faz?"
+                  />
+               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2"><LinkIcon className="w-3 h-3"/> URL de Acesso</label>
-                    <input value={formData.url} onChange={(e) => setFormData({...formData, url: e.target.value})} type="text" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" placeholder="https://" />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2"><ImageIcon className="w-3 h-3"/> URL da Imagem (Capa)</label>
-                    <input value={formData.img} onChange={(e) => setFormData({...formData, img: e.target.value})} type="text" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" placeholder="https://" />
-                 </div>
-              </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2"><LinkIcon className="w-3 h-3"/> URL de Acesso</label>
+                     <input value={formData.tool_url} onChange={(e) => setFormData({...formData, tool_url: e.target.value})} type="text" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" placeholder="https://" />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2"><ImageIcon className="w-3 h-3"/> URL da Imagem (Capa)</label>
+                     <input value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} type="text" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" placeholder="https://" />
+                  </div>
+               </div>
 
               <div className="flex items-center gap-6 pt-2">
                  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-white">
@@ -265,60 +265,60 @@ export default function AdminFerramentas() {
                  </label>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-white/10">
-                 <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Vídeos (Até 3 opções)</label>
-                    {formData.videos.length < 3 && (
-                       <button 
-                          type="button"
-                          onClick={() => setFormData({...formData, videos: [...formData.videos, { title: '', url: '' }]})}
-                          className="text-xs text-red-500 hover:text-red-400 font-bold"
-                       >
-                          + Adicionar Vídeo
-                       </button>
-                    )}
-                 </div>
-                 {formData.videos.map((video: any, index: number) => (
-                    <div key={index} className="flex gap-2 items-start">
-                       <div className="w-1/3">
-                          <input 
-                             type="text" 
-                             value={video.title}
-                             onChange={(e) => {
-                                const newVideos = [...formData.videos];
-                                newVideos[index].title = e.target.value;
-                                setFormData({...formData, videos: newVideos});
-                             }}
-                             className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" 
-                             placeholder="Título do Vídeo..."
-                          />
-                       </div>
-                       <div className="flex-1 flex gap-2">
-                          <input 
-                             type="text" 
-                             value={video.url}
-                             onChange={(e) => {
-                                const newVideos = [...formData.videos];
-                                newVideos[index].url = e.target.value;
-                                setFormData({...formData, videos: newVideos});
-                             }}
-                             className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" 
-                             placeholder="Youtube / Vimeo..."
-                          />
-                          <button 
-                             onClick={() => {
-                                let newVideos = formData.videos.filter((_, i) => i !== index);
-                                if (newVideos.length === 0) newVideos = [{ title: '', url: '' }];
-                                setFormData({...formData, videos: newVideos});
-                             }}
-                             className="p-3 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
-                          >
-                             <Trash2 className="w-4 h-4" />
-                          </button>
-                       </div>
-                    </div>
-                 ))}
-              </div>
+               <div className="space-y-3 pt-4 border-t border-white/10">
+                  <div className="flex justify-between items-center">
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Vídeos (Até 3 opções)</label>
+                     {formData.youtube_refs.length < 3 && (
+                        <button 
+                           type="button"
+                           onClick={() => setFormData({...formData, youtube_refs: [...formData.youtube_refs, { title: '', url: '' }]})}
+                           className="text-xs text-red-500 hover:text-red-400 font-bold"
+                        >
+                           + Adicionar Vídeo
+                        </button>
+                     )}
+                  </div>
+                  {formData.youtube_refs.map((video: any, index: number) => (
+                     <div key={index} className="flex gap-2 items-start">
+                        <div className="w-1/3">
+                           <input 
+                              type="text" 
+                              value={video.title}
+                              onChange={(e) => {
+                                 const newVideos = [...formData.youtube_refs];
+                                 newVideos[index].title = e.target.value;
+                                 setFormData({...formData, youtube_refs: newVideos});
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" 
+                              placeholder="Título do Vídeo..."
+                           />
+                        </div>
+                        <div className="flex-1 flex gap-2">
+                           <input 
+                              type="text" 
+                              value={video.url}
+                              onChange={(e) => {
+                                 const newVideos = [...formData.youtube_refs];
+                                 newVideos[index].url = e.target.value;
+                                 setFormData({...formData, youtube_refs: newVideos});
+                              }}
+                              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-red-500" 
+                              placeholder="Youtube / Vimeo..."
+                           />
+                           <button 
+                              onClick={() => {
+                                 let newVideos = formData.youtube_refs.filter((_, i) => i !== index);
+                                 if (newVideos.length === 0) newVideos = [{ title: '', url: '' }];
+                                 setFormData({...formData, youtube_refs: newVideos});
+                              }}
+                              className="p-3 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
+                           >
+                              <Trash2 className="w-4 h-4" />
+                           </button>
+                        </div>
+                     </div>
+                  ))}
+               </div>
 
            </div>
            
