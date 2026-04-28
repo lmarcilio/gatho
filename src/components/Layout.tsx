@@ -37,11 +37,29 @@ export function Layout() {
   const [config] = useConfig();
   const [is18PlusMode, setIs18PlusMode] = use18PlusMode();
   const { user } = useAuth();
+  const [profileName, setProfileName] = useState('Membro');
+  const [profileAvatar, setProfileAvatar] = useState('');
 
   // Close menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      const { supabase } = await import('../lib/supabase');
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      setProfileName((data?.full_name || user.user_metadata?.full_name || 'Membro').toString());
+      setProfileAvatar((data?.avatar_url || user.user_metadata?.avatar_url || '').toString());
+    };
+    loadProfile();
+  }, [user]);
 
   const currentLogoUrl = is18PlusMode && config.logo18Url ? config.logo18Url : config.logoUrl;
 
@@ -156,8 +174,8 @@ export function Layout() {
                  title="Perfil"
                  className="w-10 h-10 rounded-full border-2 border-sf-purple/50 overflow-hidden cursor-pointer hover:border-sf-purple transition-colors group relative"
                >
-                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=C026D3" alt="Profile" className="w-full h-full object-cover group-hover:opacity-70 transition-opacity" />
-               </button>
+                  <img src={profileAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=C026D3'} alt="Profile" className="w-full h-full object-cover group-hover:opacity-70 transition-opacity" />
+                </button>
                
                {/* Dropdown Menu */}
                {profileOpen && (
@@ -169,9 +187,9 @@ export function Layout() {
                  >
                    <div className="p-4 border-b border-white/5">
                      <p className="text-xs text-sf-text-muted font-semibold uppercase tracking-wider">Meu Perfil</p>
-                     <p className="text-sm text-white font-semibold mt-1">Membro Pro</p>
-                     <p className="text-xs text-sf-text-muted mt-1">{user?.email}</p>
-                   </div>
+                      <p className="text-sm text-white font-semibold mt-1">{profileName}</p>
+                      <p className="text-xs text-sf-text-muted mt-1">{user?.email}</p>
+                    </div>
                    
                    <NavLink
                      to="/dashboard/perfil"
