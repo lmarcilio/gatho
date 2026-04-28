@@ -7,8 +7,8 @@ const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN || '84fqkth5';
 
 // Inicializar Supabase
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Logger para debug
 const log = (message: string, data?: any) => {
@@ -111,6 +111,50 @@ export const handler: Handler = async (event, context) => {
       }
 
       log('✓ Token validado com sucesso');
+
+      const payload = body as Record<string, any>;
+      const email = (
+        payload.email ||
+        payload.customer_email ||
+        payload.client_email ||
+        payload.buyer_email ||
+        payload?.customer?.email ||
+        payload?.cliente?.email
+      )?.toString().trim().toLowerCase();
+
+      if (!email) {
+        log('⚠ Webhook sem e-mail no payload. Nenhum usuário foi criado.');
+      } else {
+        const { data: existingProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (profileError) {
+          log('❌ Erro ao consultar perfil:', profileError.message);
+        } else if (existingProfile) {
+          log(`✓ Perfil já existe para ${email}`);
+        } else {
+          const generatedPassword = crypto.randomBytes(18).toString('base64url');
+          const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
+            email,
+            password: generatedPassword,
+            email_confirm: true,
+            user_metadata: {
+              full_name:
+                payload.name || payload.customer_name || payload.client_name || payload?.customer?.name || 'Assinante',
+              source: 'webhook-payment'
+            }
+          });
+
+          if (createUserError) {
+            log('❌ Erro ao criar usuário no Auth:', createUserError.message);
+          } else {
+            log(`✓ Usuário criado no Auth e profile gerado: ${newUser.user?.id}`);
+          }
+        }
+      }
 
       // Confirmar recebimento
       log('✓ Webhook processado com sucesso');
