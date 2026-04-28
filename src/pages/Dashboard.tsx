@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { useEffect } from 'react';
 import { Sparkles, ArrowRight, Video, FileText, Wrench } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useTools, usePrompts, useAulas, use18PlusMode } from '@/lib/storage';
@@ -9,6 +10,12 @@ export default function Dashboard() {
   const [aulas] = useAulas();
   const [is18PlusMode] = use18PlusMode();
 
+  useEffect(() => {
+    console.log('Dashboard - Tools carregadas:', tools);
+    console.log('Dashboard - Prompts carregadas:', prompts);
+    console.log('Dashboard - Aulas carregadas:', aulas);
+  }, [tools, prompts, aulas]);
+
   const filteredTools = is18PlusMode ? tools : tools.filter(t => !t.is18Plus);
   const ObjectPrompts = is18PlusMode ? prompts : prompts.filter(p => !p.is18Plus);
   const filteredAulas = is18PlusMode ? aulas : aulas.filter(a => !a.is18Plus);
@@ -16,6 +23,10 @@ export default function Dashboard() {
   const recentTool = filteredTools[filteredTools.length - 1];
   const recentPrompt = ObjectPrompts[ObjectPrompts.length - 1];
   const recentAula = filteredAulas[filteredAulas.length - 1];
+
+  useEffect(() => {
+    console.log('Dashboard - Dados recentes:', { recentTool, recentPrompt, recentAula });
+  }, [recentTool, recentPrompt, recentAula]);
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
