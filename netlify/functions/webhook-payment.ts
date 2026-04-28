@@ -2,6 +2,9 @@ import { Handler } from '@netlify/functions';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
+// Token de validação do webhook (preferir variável de ambiente)
+const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN || '84fqkth5';
+
 // Inicializar Supabase
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
@@ -60,15 +63,27 @@ export const handler: Handler = async (event, context) => {
       log('Query params:', event.queryStringParameters);
       log('='.repeat(80));
 
-      // Validar token
-      const token = 
-        event.headers.authorization?.replace('Bearer ', '') ||
-        event.headers['x-webhook-token'] ||
+      // Validar token (pode vir no Header, na Query String ou no Body)
+      const getHeader = (name: string) => {
+        const key = Object.keys(event.headers || {}).find((k) => k.toLowerCase() === name.toLowerCase());
+        return key ? event.headers[key] : undefined;
+      };
+
+      const authorization = getHeader('authorization');
+      let receivedToken =
+        authorization?.replace(/^Bearer\s+/i, '').trim() ||
+        getHeader('x-webhook-token') ||
         event.queryStringParameters?.token;
 
-      log('Token recebido:', token ? '✓ Presente' : '✗ Ausente');
+      // Se não achar no header, procurar no body (muito comum em plataformas como PerfectPay, Kiwify, Ticto, Hotmart)
+      if (!receivedToken && body) {
+        const payload = body as any;
+        receivedToken = payload.token || payload.webhook_token || payload.hottok || payload.signature;
+      }
 
-      if (!token) {
+      log('Token recebido:', receivedToken ? '✓ Presente' : '✗ Ausente');
+
+      if (!receivedToken) {
         log('❌ Token não fornecido');
         return {
           statusCode: 401,
@@ -80,6 +95,22 @@ export const handler: Handler = async (event, context) => {
           }),
         };
       }
+
+      // Validar token contra o valor esperado
+      if (receivedToken !== WEBHOOK_TOKEN) {
+        log(`❌ Token inválido. Esperado: ${WEBHOOK_TOKEN}, Recebido: ${receivedToken}`);
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: 'Token inválido',
+            received_at: new Date().toISOString(),
+          }),
+        };
+      }
+
+      log('✓ Token validado com sucesso');
 
       // Confirmar recebimento
       log('✓ Webhook processado com sucesso');
