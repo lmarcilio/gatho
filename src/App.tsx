@@ -34,7 +34,7 @@ const createBrowserRoutes = (isAuthenticated: boolean, isAdmin: boolean) => crea
   },
   {
     path: '/login',
-    element: isAuthenticated ? <Navigate to="/dashboard" /> : <Login />,
+    element: <Login />,
   },
   {
     path: '/dashboard',
@@ -51,7 +51,7 @@ const createBrowserRoutes = (isAuthenticated: boolean, isAdmin: boolean) => crea
   },
   {
     path: '/admin',
-    element: (isAuthenticated && isAdmin) ? <AdminLayout /> : <Navigate to="/" />,
+    element: (isAuthenticated && isAdmin) ? <AdminLayout /> : <Navigate to="/login" />,
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: 'ferramentas', element: <AdminFerramentas /> },
@@ -67,10 +67,9 @@ const createBrowserRoutes = (isAuthenticated: boolean, isAdmin: boolean) => crea
 
 export default function App() {
   const { user, loading } = useAuth();
-  
-  // NOTE: In a real app we'd fetch the user's role from Supabase to confirm admin status.
-  // We'll hardcode as true for this test demo so they can access the admin panel.
-  const isAdmin = true;
+
+  const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'lucasmarcilo7@gmail.com').toLowerCase();
+  const isAdmin = (user?.email || '').toLowerCase() === adminEmail;
 
   if (loading) {
     return (
