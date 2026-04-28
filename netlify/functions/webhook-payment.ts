@@ -143,21 +143,31 @@ export const handler: Handler = async (event, context) => {
 
       const payload = body as Record<string, any>;
       const paymentStatus = firstDefined(
-        payload.status,
-        payload.event,
-        payload.event_type,
-        payload.order_status,
+        payload?.transaction?.status,
         payload?.payment?.status,
+        payload.status,
+        payload.order_status,
         payload?.data?.status
       ).toLowerCase();
 
+      const eventType = firstDefined(
+        payload.event,
+        payload.event_type,
+        payload.type,
+        payload.action,
+        payload?.data?.event
+      ).toLowerCase();
+
       const approvedStatuses = ['approved', 'aprovado', 'paid', 'pago', 'completed', 'complete', 'success', 'succeeded'];
-      if (paymentStatus && !approvedStatuses.includes(paymentStatus)) {
-        log(`ℹ Evento ignorado (status não aprovado): ${paymentStatus}`);
+      const approvedEvents = ['transaction_paid', 'purchase_approved', 'payment_approved', 'sale_approved', 'order_paid'];
+      const isApproved = approvedStatuses.includes(paymentStatus) || approvedEvents.includes(eventType);
+
+      if ((paymentStatus || eventType) && !isApproved) {
+        log(`ℹ Evento ignorado (status/evento não aprovado): status=${paymentStatus || '-'} event=${eventType || '-'}`);
         return {
           statusCode: 200,
           headers,
-          body: JSON.stringify({ success: true, ignored: true, reason: 'status_not_approved', paymentStatus }),
+          body: JSON.stringify({ success: true, ignored: true, reason: 'status_not_approved', paymentStatus, eventType }),
         };
       }
 
@@ -168,6 +178,7 @@ export const handler: Handler = async (event, context) => {
         payload.buyer_email,
         payload?.customer?.email,
         payload?.cliente?.email,
+        payload?.client?.email,
         payload?.buyer?.email,
         payload?.data?.customer?.email
       ).toLowerCase();
@@ -177,6 +188,7 @@ export const handler: Handler = async (event, context) => {
         payload.customer_name,
         payload.client_name,
         payload?.customer?.name,
+        payload?.client?.name,
         payload?.cliente?.nome,
         payload?.buyer?.name,
         payload?.data?.customer?.name,
@@ -189,6 +201,9 @@ export const handler: Handler = async (event, context) => {
         payload.cnpj,
         payload.document_number,
         payload?.customer?.document,
+        payload?.client?.cpf,
+        payload?.client?.cnpj,
+        payload?.client?.document,
         payload?.cliente?.documento,
         payload?.buyer?.document,
         payload?.data?.customer?.document
