@@ -7,8 +7,20 @@ const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN || '84fqkth5';
 
 // Inicializar Supabase
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+const digitsOnly = (value?: string) => (value || '').replace(/\D/g, '');
+
+const firstDefined = (...values: Array<unknown>) => {
+  for (const value of values) {
+    if (value !== undefined && value !== null) {
+      const normalized = value.toString().trim();
+      if (normalized) return normalized;
+    }
+  }
+  return '';
+};
 
 // Logger para debug
 const log = (message: string, data?: any) => {
@@ -130,14 +142,66 @@ export const handler: Handler = async (event, context) => {
       log('✓ Token validado com sucesso');
 
       const payload = body as Record<string, any>;
-      const email = (
-        payload.email ||
-        payload.customer_email ||
-        payload.client_email ||
-        payload.buyer_email ||
-        payload?.customer?.email ||
-        payload?.cliente?.email
-      )?.toString().trim().toLowerCase();
+      const paymentStatus = firstDefined(
+        payload.status,
+        payload.event,
+        payload.event_type,
+        payload.order_status,
+        payload?.payment?.status,
+        payload?.data?.status
+      ).toLowerCase();
+
+      const approvedStatuses = ['approved', 'aprovado', 'paid', 'pago', 'completed', 'complete', 'success', 'succeeded'];
+      if (paymentStatus && !approvedStatuses.includes(paymentStatus)) {
+        log(`ℹ Evento ignorado (status não aprovado): ${paymentStatus}`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ success: true, ignored: true, reason: 'status_not_approved', paymentStatus }),
+        };
+      }
+
+      const email = firstDefined(
+        payload.email,
+        payload.customer_email,
+        payload.client_email,
+        payload.buyer_email,
+        payload?.customer?.email,
+        payload?.cliente?.email,
+        payload?.buyer?.email,
+        payload?.data?.customer?.email
+      ).toLowerCase();
+
+      const fullName = firstDefined(
+        payload.name,
+        payload.customer_name,
+        payload.client_name,
+        payload?.customer?.name,
+        payload?.cliente?.nome,
+        payload?.buyer?.name,
+        payload?.data?.customer?.name,
+        'Assinante'
+      );
+
+      const document = digitsOnly(firstDefined(
+        payload.document,
+        payload.cpf,
+        payload.cnpj,
+        payload.document_number,
+        payload?.customer?.document,
+        payload?.cliente?.documento,
+        payload?.buyer?.document,
+        payload?.data?.customer?.document
+      ));
+
+      const eventId = firstDefined(
+        payload.id,
+        payload.event_id,
+        payload.transaction_id,
+        payload.sale_id,
+        payload.order_id,
+        payload?.data?.id
+      );
 
       if (!email) {
         log('⚠ Webhook sem e-mail no payload. Nenhum usuário foi criado.');
@@ -153,15 +217,17 @@ export const handler: Handler = async (event, context) => {
         } else if (existingProfile) {
           log(`✓ Perfil já existe para ${email}`);
         } else {
-          const generatedPassword = crypto.randomBytes(18).toString('base64url');
+          const generatedPassword = document || crypto.randomBytes(18).toString('base64url');
           const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
             email,
             password: generatedPassword,
             email_confirm: true,
             user_metadata: {
-              full_name:
-                payload.name || payload.customer_name || payload.client_name || payload?.customer?.name || 'Assinante',
-              source: 'webhook-payment'
+              full_name: fullName,
+              source: 'webhook-payment',
+              temporary_password: true,
+              initial_password_from_document: Boolean(document),
+              webhook_event_id: eventId || null
             }
           });
 
@@ -175,8 +241,7 @@ export const handler: Handler = async (event, context) => {
                 {
                   id: newUser.user.id,
                   email,
-                  full_name:
-                    payload.name || payload.customer_name || payload.client_name || payload?.customer?.name || 'Assinante',
+                  full_name: fullName,
                   role: 'membro',
                 },
                 { onConflict: 'id' }
