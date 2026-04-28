@@ -368,12 +368,14 @@ export default function Landing() {
                         ))}
                      </div>
 
-                     <Link 
-                        to="/login" 
-                        className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center transition-all ${plan.popular ? 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white shadow-lg' : 'bg-white/10 hover:bg-white/20 text-white'}`}
-                     >
-                        Quero este plano
-                     </Link>
+                      <a 
+                         href="https://checkout.nexano.com.br/checkout/cmohz3woc059a1ynttt6odj1u?offer=Q0UBSKN" 
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center transition-all ${plan.popular ? 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white shadow-lg' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                      >
+                         Quero este plano
+                      </a>
                   </div>
                ))}
             </div>
