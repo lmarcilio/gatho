@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Lock, Mail, KeyRound, Cat, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useConfig } from '@/lib/storage';
+import { useAuth } from '@/lib/auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config] = useConfig();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'lucasmarcilo7@gmail.com').toLowerCase();
+  const redirectPath = (location.state as { from?: string } | null)?.from;
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,12 +27,29 @@ export default function Login() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (redirectPath === '/admin' && normalizedEmail === adminEmail) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro durante a autenticação.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+    const isAdmin = (user.email || '').toLowerCase() === adminEmail;
+    if (redirectPath === '/admin' && isAdmin) {
+      navigate('/admin', { replace: true });
+      return;
+    }
+    navigate('/dashboard', { replace: true });
+  }, [user, adminEmail, redirectPath, navigate]);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 relative overflow-hidden">

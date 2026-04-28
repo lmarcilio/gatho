@@ -51,7 +51,7 @@ const createBrowserRoutes = (isAuthenticated: boolean, isAdmin: boolean) => crea
   },
   {
     path: '/admin',
-    element: (isAuthenticated && isAdmin) ? <AdminLayout /> : <Navigate to="/login" />,
+    element: (isAuthenticated && isAdmin) ? <AdminLayout /> : <Navigate to="/login" state={{ from: '/admin' }} replace />,
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: 'ferramentas', element: <AdminFerramentas /> },
