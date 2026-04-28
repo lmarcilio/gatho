@@ -99,7 +99,7 @@ export function Layout() {
 
         <div className="p-6">
           <div className="p-4 rounded-xl bg-gradient-to-br from-sf-purple/20 to-transparent border border-sf-purple/30">
-            <p className="text-xs text-sf-purple font-bold mb-1 uppercase">Plano PRO ativo</p>
+            <p className="text-xs text-sf-purple font-bold mb-1 uppercase">Plano Vitalicio</p>
             <p className="text-[10px] text-gray-400 leading-tight mb-3">Acesso ilimitado a tudo.</p>
           </div>
         </div>
