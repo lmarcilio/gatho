@@ -134,7 +134,6 @@ export function useTools() {
         }));
         setTools(formattedTools);
       } else {
-        // Se o Supabase retornar vazio, define como vazio (não usa defaults)
         setTools([]);
       }
     } catch (error) {
