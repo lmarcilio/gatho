@@ -220,6 +220,17 @@ export const handler: Handler = async (event, context) => {
 
       if (!email) {
         log('⚠ Webhook sem e-mail no payload. Nenhum usuário foi criado.');
+        return {
+          statusCode: 422,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: 'Payload sem e-mail do comprador',
+            paymentStatus,
+            eventType,
+            received_at: new Date().toISOString(),
+          }),
+        };
       } else {
         const { data: existingProfile, error: profileError } = await supabase
           .from('profiles')
@@ -248,6 +259,19 @@ export const handler: Handler = async (event, context) => {
 
           if (createUserError) {
             log('❌ Erro ao criar usuário no Auth:', createUserError.message);
+            return {
+              statusCode: 500,
+              headers,
+              body: JSON.stringify({
+                success: false,
+                error: 'Falha ao criar usuário no Supabase Auth',
+                details: createUserError.message,
+                paymentStatus,
+                eventType,
+                email,
+                received_at: new Date().toISOString(),
+              }),
+            };
           } else {
             log(`✓ Usuário criado no Auth e profile gerado: ${newUser.user?.id}`);
 
@@ -264,6 +288,18 @@ export const handler: Handler = async (event, context) => {
 
               if (upsertProfileError) {
                 log('❌ Erro ao garantir profile após criação do auth user:', upsertProfileError.message);
+                return {
+                  statusCode: 500,
+                  headers,
+                  body: JSON.stringify({
+                    success: false,
+                    error: 'Usuário criado no Auth, mas falha ao criar/atualizar profile',
+                    details: upsertProfileError.message,
+                    email,
+                    auth_user_id: newUser.user.id,
+                    received_at: new Date().toISOString(),
+                  }),
+                };
               } else {
                 log('✓ Profile garantido via upsert');
               }
