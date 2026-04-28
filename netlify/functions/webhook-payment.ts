@@ -6,7 +6,7 @@ import crypto from 'crypto';
 const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN || '84fqkth5';
 
 // Inicializar Supabase
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -50,6 +50,23 @@ export const handler: Handler = async (event, context) => {
 
   if (event.httpMethod === 'POST') {
     try {
+      if (!supabaseUrl || !supabaseServiceKey) {
+        log('❌ Variáveis do Supabase não configuradas', {
+          SUPABASE_URL: supabaseUrl ? 'ok' : 'missing',
+          SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'ok' : 'missing',
+          SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'ok' : 'missing',
+        });
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: 'Configuração do Supabase ausente na função',
+            received_at: new Date().toISOString(),
+          }),
+        };
+      }
+
       log('='.repeat(80));
       log('📨 Webhook de pagamento recebido');
       
@@ -152,6 +169,25 @@ export const handler: Handler = async (event, context) => {
             log('❌ Erro ao criar usuário no Auth:', createUserError.message);
           } else {
             log(`✓ Usuário criado no Auth e profile gerado: ${newUser.user?.id}`);
+
+            if (newUser.user?.id) {
+              const { error: upsertProfileError } = await supabase.from('profiles').upsert(
+                {
+                  id: newUser.user.id,
+                  email,
+                  full_name:
+                    payload.name || payload.customer_name || payload.client_name || payload?.customer?.name || 'Assinante',
+                  role: 'membro',
+                },
+                { onConflict: 'id' }
+              );
+
+              if (upsertProfileError) {
+                log('❌ Erro ao garantir profile após criação do auth user:', upsertProfileError.message);
+              } else {
+                log('✓ Profile garantido via upsert');
+              }
+            }
           }
         }
       }
