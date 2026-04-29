@@ -103,7 +103,7 @@ export default function AdminConfiguracoes() {
                   <div className="flex flex-col gap-4">
                      {config.logoUrl ? (
                         <div className="p-6 bg-black/40 border border-white/10 rounded-lg flex items-center justify-between">
-                           <img src={config.logoUrl} alt="Preview do Logo" className="max-h-20 object-contain bg-white/5 rounded p-2" />
+                           <img src={config.logoUrl} alt="Preview do Logo" className="object-contain bg-white/5 rounded p-2" style={{ height: `${config.logoHeight || 32}px` }} />
                            <button 
                              type="button"
                              onClick={() => setConfig({...config, logoUrl: ''})}
@@ -154,7 +154,7 @@ export default function AdminConfiguracoes() {
                   <div className="flex flex-col gap-4 mt-2">
                      {config.logo18Url ? (
                         <div className="p-6 bg-black/40 border border-white/10 rounded-lg flex items-center justify-between">
-                           <img src={config.logo18Url} alt="Preview do Logo +18" className="max-h-20 object-contain bg-white/5 rounded p-2" />
+                           <img src={config.logo18Url} alt="Preview do Logo +18" className="object-contain bg-white/5 rounded p-2" style={{ height: `${config.logoHeight || 32}px` }} />
                            <button 
                              type="button"
                              onClick={() => setConfig({...config, logo18Url: ''})}
@@ -203,12 +203,12 @@ export default function AdminConfiguracoes() {
                         <div className="flex justify-between items-center mb-4">
                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tamanho da Logo: {config.logoHeight || 32}px</label>
                         </div>
-                        <input 
-                           type="range" 
-                           min="16" 
-                           max="128" 
-                           step="4"
-                           value={config.logoHeight || 32}
+                           <input 
+                            type="range" 
+                            min="16" 
+                            max="220" 
+                            step="4"
+                            value={config.logoHeight || 32}
                            onChange={(e) => setConfig({...config, logoHeight: parseInt(e.target.value)})}
                            className="w-full accent-red-500 hover:accent-red-400"
                         />
