@@ -1,34 +1,63 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Save, Upload, Trash2 } from 'lucide-react';
-import { useConfig } from '@/lib/storage';
+import { useConfig, loadConfigFromSupabase, saveConfigToSupabase, uploadLogoToSupabase } from '@/lib/storage';
 
 export default function AdminConfiguracoes() {
   const [storedConfig, setStoredConfig] = useConfig();
   const [config, setConfig] = useState(storedConfig);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInput18Ref = useRef<HTMLInputElement>(null);
 
-  const handleSave = () => {
-    setStoredConfig(config);
-    alert("Pronto! Configurações salvas.");
+  useEffect(() => {
+    const syncConfig = async () => {
+      try {
+        const remoteConfig = await loadConfigFromSupabase();
+        if (remoteConfig) {
+          setConfig(remoteConfig);
+          setStoredConfig(remoteConfig);
+        }
+      } catch (error) {
+        console.warn('Falha ao carregar configurações globais:', error);
+      }
+    };
+
+    syncConfig();
+  }, [setStoredConfig]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await saveConfigToSupabase(config);
+      setStoredConfig(config);
+      alert('Pronto! Configurações salvas na nuvem.');
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao salvar no Supabase. Confira as políticas/tabela.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, is18: boolean) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, is18: boolean) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) { // 2MB limit
          alert("A imagem deve ter no máximo 2MB.");
          return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
+
+      try {
+        const imageUrl = await uploadLogoToSupabase(file, is18);
         if (is18) {
-           setConfig({...config, logo18Url: reader.result as string});
+           setConfig({ ...config, logo18Url: imageUrl });
         } else {
-           setConfig({...config, logoUrl: reader.result as string});
+           setConfig({ ...config, logoUrl: imageUrl });
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        console.error(error);
+        alert('Erro no upload da imagem para o Supabase Storage.');
+      }
     }
   };
 
@@ -40,8 +69,8 @@ export default function AdminConfiguracoes() {
           <p className="text-gray-400">Ajustes da plataforma, nomes e detalhes técnicos.</p>
         </div>
         
-        <button onClick={handleSave} className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.4)]">
-          <Save className="w-4 h-4" /> Salvar Configurações
+        <button onClick={handleSave} disabled={saving} className="bg-red-500 hover:bg-red-600 disabled:opacity-70 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+          <Save className="w-4 h-4" /> {saving ? 'Salvando...' : 'Salvar Configurações'}
         </button>
       </div>
 

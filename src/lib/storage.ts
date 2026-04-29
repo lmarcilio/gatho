@@ -56,6 +56,8 @@ const defaultConfig = {
   logoHeight: 32
 };
 
+const APP_SETTINGS_ID = 1;
+
 // Helper for local storage
 function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -244,5 +246,75 @@ export function useAulas() {
 
 export function useCursos() { return useLocalStorage('sf_cursos', defaultCursos); }
 export function useBonus() { return useLocalStorage('sf_bonus', defaultBonus); }
-export function useConfig() { return useLocalStorage('sf_config', defaultConfig); }
 export function use18PlusMode() { return useLocalStorage('sf_18plus_mode', false); }
+
+export async function loadConfigFromSupabase() {
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('title, support_email, accent_color, registration_open, logo_url, logo_18_url, logo_height')
+    .eq('id', APP_SETTINGS_ID)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    title: data.title ?? defaultConfig.title,
+    supportEmail: data.support_email ?? defaultConfig.supportEmail,
+    accentColor: data.accent_color ?? defaultConfig.accentColor,
+    registrationOpen: data.registration_open ?? defaultConfig.registrationOpen,
+    logoUrl: data.logo_url ?? '',
+    logo18Url: data.logo_18_url ?? '',
+    logoHeight: data.logo_height ?? defaultConfig.logoHeight
+  };
+}
+
+export async function saveConfigToSupabase(config: typeof defaultConfig) {
+  const payload = {
+    id: APP_SETTINGS_ID,
+    title: config.title,
+    support_email: config.supportEmail,
+    accent_color: config.accentColor,
+    registration_open: config.registrationOpen,
+    logo_url: config.logoUrl,
+    logo_18_url: config.logo18Url,
+    logo_height: config.logoHeight,
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await supabase.from('app_settings').upsert(payload);
+  if (error) throw error;
+}
+
+export async function uploadLogoToSupabase(file: File, is18: boolean) {
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
+  const filePath = `branding/${is18 ? 'logo-18' : 'logo'}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('branding')
+    .upload(filePath, file, { upsert: true, contentType: file.type || undefined });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from('branding').getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+export function useConfig() {
+  const [config, setConfig] = useLocalStorage('sf_config', defaultConfig);
+
+  useEffect(() => {
+    const syncConfig = async () => {
+      try {
+        const remoteConfig = await loadConfigFromSupabase();
+        if (remoteConfig) setConfig(remoteConfig);
+      } catch (error) {
+        console.warn('Erro ao sincronizar config global:', error);
+      }
+    };
+
+    syncConfig();
+  }, []);
+
+  return [config, setConfig] as const;
+}
