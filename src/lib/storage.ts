@@ -245,7 +245,42 @@ export function useAulas() {
 }
 
 export function useCursos() { return useLocalStorage('sf_cursos', defaultCursos); }
-export function useBonus() { return useLocalStorage('sf_bonus', defaultBonus); }
+export function useBonus() {
+  const [bonus, setBonus] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadBonusFromSupabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('bonus')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.warn('Erro ao carregar bonus do Supabase:', error);
+          setBonus([]);
+          return;
+        }
+
+        const formattedBonus = (data || []).map((item: any) => ({
+          ...item,
+          pageLink: item.pageLink || item.page_link || '',
+          videos: item.videos || item.video_refs || [],
+          is18Plus: typeof item.is18Plus === 'boolean' ? item.is18Plus : !!item.is_18_plus
+        }));
+
+        setBonus(formattedBonus);
+      } catch (error) {
+        console.error('Erro critico ao carregar bonus:', error);
+        setBonus([]);
+      }
+    };
+
+    loadBonusFromSupabase();
+  }, []);
+
+  return [bonus, setBonus] as const;
+}
 export function use18PlusMode() { return useLocalStorage('sf_18plus_mode', false); }
 
 export async function loadConfigFromSupabase() {
