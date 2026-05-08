@@ -16,6 +16,15 @@ export default function Ferramentas() {
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
 
   useEffect(() => {
+    const normalizeTool = (tool: any) => ({
+      ...tool,
+      img: tool.img || tool.image_url || '',
+      url: tool.url || tool.tool_url || '',
+      desc: tool.desc || tool.description || '',
+      videos: tool.videos || tool.youtube_refs || [],
+      is18Plus: typeof tool.is18Plus === 'boolean' ? tool.is18Plus : !!tool.is_18_plus
+    });
+
     const fetchTools = async () => {
       setLoading(true);
       try {
@@ -24,7 +33,7 @@ export default function Ferramentas() {
           .select('*')
           .order('created_at', { ascending: false });
         if (error) throw error;
-        setTools(data || []);
+        setTools((data || []).map(normalizeTool));
       } catch (err) {
         console.error('Erro ao buscar ferramentas:', err);
       } finally {
